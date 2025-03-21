@@ -1,0 +1,27 @@
+FROM node:22 AS build
+
+WORKDIR /app
+
+COPY package*.json ./
+
+RUN npm install
+
+COPY . .
+
+RUN npm run build
+
+FROM nginx:alpine
+
+# Copy the build output from the build stage to Nginx's serving directory
+COPY --from=build /app/dist /usr/share/nginx/html
+
+# Remove the default Nginx configuration file
+RUN rm /etc/nginx/nginx.conf
+
+# Copy the nginx config to the container
+COPY nginx.conf /etc/nginx/nginx.conf
+
+EXPOSE 80
+
+# Start Nginx in the foreground
+CMD ["nginx", "-g", "daemon off;"]
